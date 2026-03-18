@@ -2,6 +2,7 @@
    DESIGN TOKENS — from DESIGN.md
    ================================================ */
 :root {
+    color-scheme: dark light;
     /* Typography */
     --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
