@@ -327,6 +327,24 @@ const CURATED_BRIDGES = [
         curated: true
     },
 
+    {
+        id: 'queensboro',
+        name: 'Queensboro Bridge (59th St)',
+        location: 'East River, New York',
+        lat: 40.7570,
+        lng: -73.9545,
+        country: 'US',
+        region: 'New York',
+        spans: [
+            { id: 'main', label: 'Main Span', clearance: 39.9 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8518750',
+        curated: true
+    },
+
     // ==================== United States — New England ====================
     {
         id: 'cap-cod-canal-rr',
@@ -441,8 +459,8 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Chesapeake Bay',
         spans: [
-            { id: 'north', label: 'North Channel', clearance: 23.2 },
-            { id: 'south', label: 'South Channel', clearance: 22.9 }
+            { id: 'north', label: 'North Channel Bridge', clearance: 22.9 },
+            { id: 'fisherman', label: 'Fisherman Inlet Bridge', clearance: 12.2 }
         ],
         chartDatum: 0,
         defaultSpan: 'north',
@@ -502,6 +520,57 @@ const CURATED_BRIDGES = [
         defaultSpan: 'closed',
         tideProvider: 'noaa',
         tideStationId: '8656483',
+        curated: true
+    },
+    {
+        id: 'icw-little-river-swing',
+        name: 'Little River Swing Bridge',
+        location: 'ICW, Little River SC',
+        lat: 33.8687,
+        lng: -78.6148,
+        country: 'US',
+        region: 'Carolinas',
+        spans: [
+            { id: 'closed', label: 'Closed (Swing)', clearance: 2.1 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'closed',
+        tideProvider: 'noaa',
+        tideStationId: '8660271',
+        curated: true
+    },
+    {
+        id: 'icw-barefoot-landing',
+        name: 'Barefoot Landing Swing Bridge',
+        location: 'ICW, North Myrtle Beach SC',
+        lat: 33.8174,
+        lng: -78.7282,
+        country: 'US',
+        region: 'Carolinas',
+        spans: [
+            { id: 'closed', label: 'Closed (Swing)', clearance: 9.4 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'closed',
+        tideProvider: 'noaa',
+        tideStationId: '8660642',
+        curated: true
+    },
+    {
+        id: 'icw-socastee',
+        name: 'Socastee Swing Bridge (SC 544)',
+        location: 'ICW, Myrtle Beach SC',
+        lat: 33.6636,
+        lng: -79.0028,
+        country: 'US',
+        region: 'Carolinas',
+        spans: [
+            { id: 'closed', label: 'Closed (Swing)', clearance: 3.7 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'closed',
+        tideProvider: 'noaa',
+        tideStationId: '8661070',
         curated: true
     },
     {
@@ -576,6 +645,74 @@ const CURATED_BRIDGES = [
     },
 
     // ==================== United States — Florida ICW ====================
+    {
+        id: 'icw-flagler-beach',
+        name: 'Flagler Beach Bridge (SR 100)',
+        location: 'ICW, Flagler Beach FL',
+        lat: 29.4722,
+        lng: -81.1268,
+        country: 'US',
+        region: 'Florida — ICW',
+        spans: [
+            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8720587',
+        curated: true
+    },
+    {
+        id: 'icw-granada',
+        name: 'Granada Boulevard Bridge',
+        location: 'ICW, Ormond Beach FL',
+        lat: 29.2849,
+        lng: -81.0570,
+        country: 'US',
+        region: 'Florida — ICW',
+        spans: [
+            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8721120',
+        curated: true
+    },
+    {
+        id: 'icw-seabreeze',
+        name: 'Seabreeze Bridge',
+        location: 'ICW, Daytona Beach FL',
+        lat: 29.2321,
+        lng: -81.0168,
+        country: 'US',
+        region: 'Florida — ICW',
+        spans: [
+            { id: 'main', label: 'Fixed Span', clearance: 20.1 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8721120',
+        curated: true
+    },
+    {
+        id: 'icw-speedway',
+        name: 'International Speedway Bridge',
+        location: 'ICW, Daytona Beach FL',
+        lat: 29.2264,
+        lng: -81.0138,
+        country: 'US',
+        region: 'Florida — ICW',
+        spans: [
+            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8721120',
+        curated: true
+    },
     {
         id: 'st-augustine-bridge-of-lions',
         name: 'Bridge of Lions',
@@ -986,6 +1123,23 @@ const CURATED_BRIDGES = [
         defaultSpan: 'main',
         tideProvider: 'noaa',
         tideStationId: '8743735',
+        curated: true
+    },
+    {
+        id: 'pontchartrain-causeway',
+        name: 'Lake Pontchartrain Causeway',
+        location: 'Lake Pontchartrain, Louisiana',
+        lat: 30.2087,
+        lng: -90.1156,
+        country: 'US',
+        region: 'Gulf Coast',
+        spans: [
+            { id: 'main', label: 'Fixed Span', clearance: 15.2 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'noaa',
+        tideStationId: '8761927',
         curated: true
     },
     {
