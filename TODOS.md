@@ -7,6 +7,16 @@ Branch: `claude/install-gstack-setup-eFbqx`
 
 ## P1 — High Priority
 
+### Design tokens: typography + spacing scale
+**What:** Define CSS custom properties for a 6-step type scale (xs/sm/base/lg/xl/2xl), 8-step spacing scale (2/4/8/12/16/20/24/32px), and 3 border-radius sizes (sm/md/lg). Refactor all existing CSS to reference tokens instead of ad-hoc values.
+**Why:** Currently 15 different font sizes and 15+ spacing values with no pattern. Every new component is a guessing game ("is a label 12px or 13px?"). The 5 new features from CEO review will compound this inconsistency. Required before light/dark mode (theme toggle swaps token values).
+**Effort:** S (human: ~1 day) / CC: S (~15 min)
+**Priority:** P1
+**Depends on:** Nothing
+**Blocks:** Light/dark mode toggle
+**Context:** Decision 8A from /plan-design-review (2026-03-18).
+**Files:** `css/styles.css` (refactor all rules to use tokens)
+
 ### Add test framework + core unit tests
 **What:** Set up a lightweight test framework (Vitest or Node test runner) with unit tests for `interpolateTideHeight()`, LINZ CSV parsing, NZ DST calculation, NOAA response normalization, and `findBestTimes()` window grouping.
 **Why:** Safety-critical math with no verification. The Rule of Twelfths interpolation directly determines whether a boat can safely pass under a bridge. A bug here has real-world consequences.
