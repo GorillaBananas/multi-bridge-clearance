@@ -250,7 +250,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 30.5 }
+            { id: 'main', label: 'Main Span', clearance: 39.6 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -318,7 +318,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 41.1 }
+            { id: 'main', label: 'Main Span', clearance: 42.7 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
