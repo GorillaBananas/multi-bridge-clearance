@@ -146,6 +146,32 @@ const TideProviders = {
             return null;
         },
 
+        // CORS proxies to try in order
+        _corsProxies: [
+            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+        ],
+
+        async _fetchWithProxyFallback(url, timeoutMs = 8000) {
+            let lastError;
+            for (const proxyFn of this._corsProxies) {
+                const proxyUrl = proxyFn(url);
+                try {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), timeoutMs);
+                    const response = await fetch(proxyUrl, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.text();
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`CORS proxy failed (${proxyUrl}):`, err.message);
+                }
+            }
+            throw new Error(`All CORS proxies failed. Last error: ${lastError?.message || 'unknown'}`);
+        },
+
         async getTidePredictions(stationId, dateStr) {
             const selectedDate = new Date(dateStr + 'T00:00:00');
             const year = selectedDate.getFullYear();
@@ -155,12 +181,8 @@ const TideProviders = {
             }
 
             const csvUrl = `https://static.charts.linz.govt.nz/tide-tables/maj-ports/csv/${encodeURIComponent(stationId)}%20${year}.csv`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(csvUrl)}`;
 
-            const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error('Failed to fetch LINZ tide data');
-
-            const csvText = await response.text();
+            const csvText = await this._fetchWithProxyFallback(csvUrl);
             const allPoints = this._parseLinzCsv(csvText, selectedDate);
 
             if (allPoints.today.length === 0) {
