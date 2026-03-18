@@ -232,6 +232,8 @@
         let selectedSpanName = '';
         let currentTideData = null; // { points, prevDayLastPoint, nextDayFirstPoint, source, ... }
         let lastLoadedKey = null; // "bridgeId:date" cache key
+        let userLat = null;
+        let userLng = null;
 
         // ==================== Initialize ====================
         document.addEventListener('DOMContentLoaded', () => {
@@ -283,14 +285,14 @@
                 e.target.value = value;
             });
 
-            // Try to locate user and show nearby bridges
+            // Try to locate user and sort country groups by proximity
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    const nearby = db.findNearby(pos.coords.latitude, pos.coords.longitude, 200);
-                    if (nearby.length > 0) {
-                        renderBridgeList(nearby);
-                        bridgeMap.map.setView([pos.coords.latitude, pos.coords.longitude], 10);
-                    }
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    // Re-render bridge list with country groups sorted by proximity
+                    renderBridgeList(db.getAll(), true);
+                    bridgeMap.map.setView([userLat, userLng], 10);
                 }, () => {
                     // Geolocation denied - show all bridges
                     bridgeMap.fitAllBridges();
@@ -339,26 +341,21 @@
         function renderBridgeList(bridges, grouped = false) {
             const container = document.getElementById('bridgeList');
 
-            // If showing all bridges (not search/nearby), group by region
+            // If showing all bridges (not search/nearby), group by country
             const showGrouped = grouped && bridges.length > 10;
 
             if (showGrouped) {
-                const groups = {};
-                for (const b of bridges) {
-                    const region = b.region || 'Other';
-                    if (!groups[region]) groups[region] = [];
-                    groups[region].push(b);
-                }
+                const countryGroups = db.getGroupedByCountry(userLat, userLng);
 
-                container.innerHTML = Object.entries(groups).map(([region, regionBridges]) => `
+                container.innerHTML = countryGroups.map(({ label, bridges: countryBridges }) => `
                     <div class="bridge-region">
                         <div class="bridge-region-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                            <span class="bridge-region-name">${region}</span>
-                            <span class="bridge-region-count">${regionBridges.length}</span>
+                            <span class="bridge-region-name">${label}</span>
+                            <span class="bridge-region-count">${countryBridges.length}</span>
                             <span class="bridge-region-chevron">▾</span>
                         </div>
                         <div class="bridge-region-items">
-                            ${regionBridges.map(b => renderBridgeItem(b)).join('')}
+                            ${countryBridges.map(b => renderBridgeItem(b)).join('')}
                         </div>
                     </div>
                 `).join('');

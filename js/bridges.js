@@ -1447,6 +1447,54 @@ class BridgeDatabase {
         return groups;
     }
 
+    // Get bridges grouped by country, sorted by proximity to user location
+    getGroupedByCountry(userLat, userLng) {
+        const COUNTRY_NAMES = {
+            'NZ': 'New Zealand',
+            'US': 'United States',
+            'AU': 'Australia',
+            'UK': 'United Kingdom',
+        };
+
+        const groups = {};
+        for (const b of this.bridges) {
+            const code = b.country || 'Other';
+            const label = COUNTRY_NAMES[code] || code;
+            if (!groups[label]) groups[label] = { bridges: [], code };
+            groups[label].bridges.push(b);
+        }
+
+        // Sort bridges within each country: by region, then alphabetically by name
+        for (const label of Object.keys(groups)) {
+            groups[label].bridges.sort((a, b) => {
+                const regionCmp = (a.region || '').localeCompare(b.region || '');
+                if (regionCmp !== 0) return regionCmp;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
+        // Sort country groups by distance to user (nearest first)
+        let sortedEntries = Object.entries(groups);
+        if (userLat != null && userLng != null && typeof haversineDistance === 'function') {
+            // Compute average lat/lng per country group as centroid
+            const centroids = {};
+            for (const [label, group] of sortedEntries) {
+                const bridges = group.bridges;
+                const avgLat = bridges.reduce((s, b) => s + b.lat, 0) / bridges.length;
+                const avgLng = bridges.reduce((s, b) => s + b.lng, 0) / bridges.length;
+                centroids[label] = { lat: avgLat, lng: avgLng };
+            }
+            sortedEntries.sort((a, b) => {
+                const distA = haversineDistance(userLat, userLng, centroids[a[0]].lat, centroids[a[0]].lng);
+                const distB = haversineDistance(userLat, userLng, centroids[b[0]].lat, centroids[b[0]].lng);
+                return distA - distB;
+            });
+        }
+
+        // Return as ordered array of { label, bridges }
+        return sortedEntries.map(([label, group]) => ({ label, bridges: group.bridges }));
+    }
+
     search(query) {
         const q = query.toLowerCase();
         return this.bridges.filter(b =>
