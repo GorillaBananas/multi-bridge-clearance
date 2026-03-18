@@ -2,6 +2,7 @@
 // Persisted in localStorage
 
 const STORAGE_KEY = 'bridgeClearance_bridges';
+const VERIFIED_KEY = 'bridgeClearance_verified';
 
 // Curated bridge database - known navigable bridges with posted vertical clearances
 // Clearances are measured from chart datum (CD) unless otherwise noted
@@ -41,7 +42,8 @@ const CURATED_BRIDGES = [
         defaultSpan: 'in-out',
         tideProvider: 'linz',
         tideStationId: 'Auckland',
-        curated: true
+        curated: true,
+        verified: true
     },
     {
         id: 'panmure',
@@ -1378,6 +1380,7 @@ class BridgeDatabase {
     constructor() {
         this.bridges = [...CURATED_BRIDGES];
         this._loadUserBridges();
+        this._loadVerifiedBridges();
     }
 
     _loadUserBridges() {
@@ -1395,6 +1398,43 @@ class BridgeDatabase {
     _saveUserBridges() {
         const userBridges = this.bridges.filter(b => !b.curated);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(userBridges));
+    }
+
+    _loadVerifiedBridges() {
+        try {
+            const stored = localStorage.getItem(VERIFIED_KEY);
+            if (stored) {
+                const verifiedIds = JSON.parse(stored);
+                for (const b of this.bridges) {
+                    if (verifiedIds.includes(b.id)) b.verified = true;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load verified bridges:', e);
+        }
+    }
+
+    _saveVerifiedBridges() {
+        const verifiedIds = this.bridges.filter(b => b.verified).map(b => b.id);
+        localStorage.setItem(VERIFIED_KEY, JSON.stringify(verifiedIds));
+    }
+
+    verifyBridge(id) {
+        const bridge = this.getById(id);
+        if (bridge) {
+            bridge.verified = true;
+            this._saveVerifiedBridges();
+        }
+        return bridge;
+    }
+
+    unverifyBridge(id) {
+        const bridge = this.getById(id);
+        if (bridge) {
+            bridge.verified = false;
+            this._saveVerifiedBridges();
+        }
+        return bridge;
     }
 
     getAll() {
