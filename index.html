@@ -64,7 +64,7 @@
             </div>
 
             <!-- Bridge List (nearby/search results) -->
-            <div class="bridge-list-hint">Select a bridge to check clearance, or add your own</div>
+            <div class="bridge-list-hint">Search above, browse by region below, or add your own</div>
             <div id="bridgeList" class="bridge-list"></div>
 
             <!-- Selected Bridge Info -->
@@ -255,7 +255,7 @@
             document.getElementById('tideDate').value = now.toISOString().slice(0, 10);
 
             // Render bridge list
-            renderBridgeList(db.getAll());
+            renderBridgeList(db.getAll(), true);
 
             // Search handler
             const searchInput = document.getElementById('bridgeSearch');
@@ -263,7 +263,7 @@
                 const query = e.target.value.trim();
                 if (query.length === 0) {
                     document.getElementById('searchResults').classList.add('hidden');
-                    renderBridgeList(db.getAll());
+                    renderBridgeList(db.getAll(), true);
                     return;
                 }
                 const results = db.search(query);
@@ -336,25 +336,53 @@
             document.getElementById('clearanceCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function renderBridgeList(bridges) {
+        function renderBridgeList(bridges, grouped = false) {
             const container = document.getElementById('bridgeList');
-            container.innerHTML = bridges.map(b => {
-                const maxClearance = Math.max(...b.spans.map(s => s.clearance));
-                const distanceStr = b.distance ? ` (${b.distance.toFixed(0)} km)` : '';
-                const isSelected = selectedBridge && selectedBridge.id === b.id;
-                return `
-                    <div class="bridge-item ${isSelected ? 'selected' : ''}" data-id="${b.id}" onclick="selectBridge('${b.id}')">
-                        <div class="bridge-item-info">
-                            <div class="bridge-item-name">${b.name}${!b.curated ? ' *' : ''}</div>
-                            <div class="bridge-item-location">${b.location}${distanceStr}</div>
+
+            // If showing all bridges (not search/nearby), group by region
+            const showGrouped = grouped && bridges.length > 10;
+
+            if (showGrouped) {
+                const groups = {};
+                for (const b of bridges) {
+                    const region = b.region || 'Other';
+                    if (!groups[region]) groups[region] = [];
+                    groups[region].push(b);
+                }
+
+                container.innerHTML = Object.entries(groups).map(([region, regionBridges]) => `
+                    <div class="bridge-region">
+                        <div class="bridge-region-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                            <span class="bridge-region-name">${region}</span>
+                            <span class="bridge-region-count">${regionBridges.length}</span>
+                            <span class="bridge-region-chevron">▾</span>
                         </div>
-                        <div style="text-align: right;">
-                            <div class="bridge-item-clearance">${maxClearance.toFixed(1)}m</div>
-                            ${!b.curated ? '<button class="map-btn" style="margin-top:4px;font-size:11px;padding:3px 8px;" onclick="event.stopPropagation(); removeCustomBridge(\'' + b.id + '\')">Remove</button>' : ''}
+                        <div class="bridge-region-items">
+                            ${regionBridges.map(b => renderBridgeItem(b)).join('')}
                         </div>
                     </div>
-                `;
-            }).join('');
+                `).join('');
+            } else {
+                container.innerHTML = bridges.map(b => renderBridgeItem(b)).join('');
+            }
+        }
+
+        function renderBridgeItem(b) {
+            const maxClearance = Math.max(...b.spans.map(s => s.clearance));
+            const distanceStr = b.distance ? ` (${b.distance.toFixed(0)} km)` : '';
+            const isSelected = selectedBridge && selectedBridge.id === b.id;
+            return `
+                <div class="bridge-item ${isSelected ? 'selected' : ''}" data-id="${b.id}" onclick="selectBridge('${b.id}')">
+                    <div class="bridge-item-info">
+                        <div class="bridge-item-name">${b.name}${!b.curated ? ' *' : ''}</div>
+                        <div class="bridge-item-location">${b.location}${distanceStr}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="bridge-item-clearance">${maxClearance.toFixed(1)}m</div>
+                        ${!b.curated ? '<button class="map-btn" style="margin-top:4px;font-size:11px;padding:3px 8px;" onclick="event.stopPropagation(); removeCustomBridge(\'' + b.id + '\')">Remove</button>' : ''}
+                    </div>
+                </div>
+            `;
         }
 
         function renderSearchResults(results) {
@@ -460,7 +488,7 @@
 
                 // Refresh UI
                 bridgeMap.showBridges(db.getAll());
-                renderBridgeList(db.getAll());
+                renderBridgeList(db.getAll(), true);
                 cancelAddBridge();
                 selectBridge(bridge.id);
 
@@ -486,7 +514,7 @@
                 document.getElementById('selectedBridgeInfo').classList.add('hidden');
             }
             bridgeMap.showBridges(db.getAll());
-            renderBridgeList(db.getAll());
+            renderBridgeList(db.getAll(), true);
             showToast('Bridge removed', 'success');
         }
 

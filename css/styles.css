@@ -372,8 +372,8 @@ body {
 .bridge-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
-    max-height: 280px;
+    gap: var(--space-xs);
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -430,6 +430,66 @@ body {
 }
 
 .bridge-item.selected .bridge-item-clearance { color: var(--text-primary); }
+
+/* Region grouping */
+.bridge-region {
+    margin-bottom: var(--space-xs);
+}
+
+.bridge-region-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    user-select: none;
+    border-radius: var(--radius-sm);
+    transition: background var(--duration-micro) var(--ease-out);
+}
+
+.bridge-region-header:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.bridge-region-name {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex: 1;
+}
+
+.bridge-region-count {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--text-tertiary);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 6px;
+    border-radius: 99px;
+}
+
+.bridge-region-chevron {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    transition: transform var(--duration-micro) var(--ease-out);
+}
+
+.bridge-region.collapsed .bridge-region-chevron {
+    transform: rotate(-90deg);
+}
+
+.bridge-region-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding-left: var(--space-sm);
+}
+
+.bridge-region.collapsed .bridge-region-items {
+    display: none;
+}
 
 /* ================================================
    SPAN GRID
