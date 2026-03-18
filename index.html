@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bridge Clearance">
     <meta name="application-name" content="Bridge Clearance">
-    <meta name="theme-color" content="#0A1628">
+    <meta name="theme-color" content="#0D1B2A">
 
     <meta name="description" content="Calculate safe passage times under bridges worldwide with real-time tide data. Free tool for boat skippers using NOAA, LINZ and government tide predictions.">
     <meta name="keywords" content="bridge clearance, tide calculator, boat navigation, NOAA tides, LINZ tides, maritime safety, boat clearance">
@@ -16,7 +16,11 @@
     <meta property="og:title" content="Bridge Clearance Calculator - Worldwide">
     <meta property="og:description" content="Calculate safe boat passage under bridges worldwide using real-time government tide data.">
 
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230A1628'/%3E%3Cpath d='M50 25 L75 75 L50 65 L25 75 Z' fill='%23ffffff' stroke='%235BA3D0' stroke-width='2'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230D1B2A'/%3E%3Cpath d='M50 25 L75 75 L50 65 L25 75 Z' fill='%23ffffff' stroke='%234A9EC5' stroke-width='2'/%3E%3C/svg%3E">
+
+    <!-- Fonts: Satoshi (display) + DM Sans (body) + JetBrains Mono -->
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
@@ -26,15 +30,16 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Hero -->
-        <div class="hero-header">
-            <div class="hero-icon">&#x26F5;</div>
-            <h1 class="hero-title">Bridge Clearance<br>Calculator</h1>
-            <p class="hero-subtitle">Real-time tide-based clearance for bridges worldwide</p>
-        </div>
+        <!-- Header (slim, functional) -->
+        <header class="app-header">
+            <div>
+                <h1 class="app-header-title">Bridge Clearance Calculator</h1>
+                <p class="app-header-subtitle">Real-time tide-based clearance worldwide</p>
+            </div>
+        </header>
 
         <!-- Bridge Selection Card -->
-        <div class="glass-card">
+        <div class="card">
             <div class="card-header">
                 <div class="card-icon">&#x1F30D;</div>
                 <div>
@@ -59,6 +64,7 @@
             </div>
 
             <!-- Bridge List (nearby/search results) -->
+            <div class="bridge-list-hint">Select a bridge to check clearance, or add your own</div>
             <div id="bridgeList" class="bridge-list"></div>
 
             <!-- Selected Bridge Info -->
@@ -68,7 +74,7 @@
         </div>
 
         <!-- Add Bridge Form (hidden by default) -->
-        <div id="addBridgeForm" class="glass-card hidden">
+        <div id="addBridgeForm" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x2795;</div>
                 <div>
@@ -115,7 +121,7 @@
         </div>
 
         <!-- Bridge Clearance Card (shows after bridge selected) -->
-        <div id="clearanceCard" class="glass-card hidden">
+        <div id="clearanceCard" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x1F4CF;</div>
                 <h2 class="card-title">Bridge Clearance</h2>
@@ -127,7 +133,7 @@
         </div>
 
         <!-- Date/Time Card -->
-        <div id="dateTimeCard" class="glass-card hidden">
+        <div id="dateTimeCard" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x1F4C5;</div>
                 <h2 class="card-title">When are you traveling?</h2>
@@ -144,7 +150,7 @@
         </div>
 
         <!-- Boat Details Card -->
-        <div id="boatCard" class="glass-card hidden">
+        <div id="boatCard" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x26F5;</div>
                 <h2 class="card-title">Your Boat</h2>
@@ -165,6 +171,12 @@
                 </div>
                 <p class="input-hint">Recommended minimum clearance above boat</p>
             </div>
+
+            <!-- Action Buttons (inside boat card) -->
+            <div id="actionButtons" class="button-group">
+                <button class="btn btn-secondary" onclick="checkClearance()">Check Now</button>
+                <button class="btn btn-primary" onclick="findBestTimes()">Find Times</button>
+            </div>
         </div>
 
         <!-- Loading Overlay -->
@@ -176,13 +188,7 @@
         </div>
 
         <div id="toastContainer"></div>
-        <div id="resultContainer"></div>
-
-        <!-- Action Buttons -->
-        <div id="actionButtons" class="button-group hidden">
-            <button class="btn btn-secondary" onclick="checkClearance()">Check Now</button>
-            <button class="btn btn-primary" onclick="findBestTimes()">Find Times</button>
-        </div>
+        <div id="resultContainer" aria-live="assertive"></div>
 
         <div class="footer-links">
             Tide data provided by
@@ -292,7 +298,6 @@
             document.getElementById('clearanceCard').classList.remove('hidden');
             document.getElementById('dateTimeCard').classList.remove('hidden');
             document.getElementById('boatCard').classList.remove('hidden');
-            document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('resultContainer').innerHTML = '';
 
             // Update span selector
@@ -337,7 +342,12 @@
         function renderSearchResults(results) {
             const container = document.getElementById('searchResults');
             if (results.length === 0) {
-                container.classList.add('hidden');
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="search-empty">
+                        No bridges found. <button class="search-empty-cta" onclick="toggleAddBridge(); document.getElementById('searchResults').classList.add('hidden');">Add your own bridge</button>
+                    </div>
+                `;
                 return;
             }
             container.classList.remove('hidden');
@@ -455,7 +465,6 @@
                 document.getElementById('clearanceCard').classList.add('hidden');
                 document.getElementById('dateTimeCard').classList.add('hidden');
                 document.getElementById('boatCard').classList.add('hidden');
-                document.getElementById('actionButtons').classList.add('hidden');
                 document.getElementById('selectedBridgeInfo').classList.add('hidden');
             }
             bridgeMap.showBridges(db.getAll());
@@ -630,7 +639,7 @@
             if (tideResult.interpolated) {
                 const bTime = tideResult.beforeTime.toLocaleTimeString(undefined, timeOpts);
                 const aTime = tideResult.afterTime.toLocaleTimeString(undefined, timeOpts);
-                accuracyNote = `<div class="info-panel" style="margin-top: 16px; background: rgba(91,163,208,0.15); border-color: rgba(91,163,208,0.3);">
+                accuracyNote = `<div class="info-panel" style="margin-top: 16px; background: var(--color-info-bg); border-color: rgba(74,158,197,0.25);">
                     <p class="info-text"><strong>* Interpolated:</strong> Tide calculated between ${bTime} (${tideResult.beforeHeight.toFixed(2)}m) and ${aTime} (${tideResult.afterHeight.toFixed(2)}m) using Rule of Twelfths.</p>
                 </div>`;
             }
@@ -670,7 +679,7 @@
                             <p class="info-text"><strong>Weather Impact:</strong> Barometric pressure and wind can affect tide height. Add extra margin in adverse conditions.</p>
                         </div>
 
-                        <div class="info-panel" style="margin-top: 8px; background: rgba(184,230,249,0.15); border-color: rgba(184,230,249,0.3);">
+                        <div class="info-panel" style="margin-top: 8px; background: var(--color-info-bg); border-color: rgba(74,158,197,0.25);">
                             <p class="info-text" style="margin-bottom: 10px;"><strong>Tide Data Points:</strong></p>
                             ${currentTideData.points.map(p => `
                                 <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;">
@@ -679,7 +688,7 @@
                                 </div>
                             `).join('')}
                             <p class="info-text" style="margin-top:10px;font-size:12px;opacity:0.8;">
-                                Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--foam);text-decoration:underline;">${currentTideData.source}</a>
+                                Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--color-primary);text-decoration:underline;">${currentTideData.source}</a>
                             </p>
                         </div>
                     </div>
@@ -756,7 +765,7 @@
                     <div class="info-panel">
                         <p class="info-text"><strong>Understanding the Data:</strong> "Min" shows minimum clearance during the window. Choose times with higher clearance for maximum safety.</p>
                     </div>
-                    <div class="info-panel" style="margin-top: 12px; background: rgba(184,230,249,0.15); border-color: rgba(184,230,249,0.3);">
+                    <div class="info-panel" style="margin-top: 12px; background: var(--color-info-bg); border-color: rgba(74,158,197,0.25);">
                         <p class="info-text" style="margin-bottom: 10px;"><strong>Tide Data Points:</strong></p>
                         ${currentTideData.points.map(p => `
                             <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;">
@@ -765,7 +774,7 @@
                             </div>
                         `).join('')}
                         <p class="info-text" style="margin-top:10px;font-size:12px;opacity:0.8;">
-                            Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--foam);text-decoration:underline;">${currentTideData.source}</a>
+                            Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--color-primary);text-decoration:underline;">${currentTideData.source}</a>
                         </p>
                     </div>
                 </div>
@@ -789,7 +798,7 @@
             toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => {
-                toast.style.animation = 'slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) reverse';
+                toast.style.animation = 'toastIn 0.3s ease reverse';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
