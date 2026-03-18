@@ -151,7 +151,7 @@ body {
 
 .app-header-title {
     font-family: var(--font-display);
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -1421,7 +1421,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     .form-row { grid-template-columns: 1fr; }
     #bridgeMap { height: 220px; }
     .card-title { font-size: 18px; }
-    .app-header-title { font-size: 18px; }
+    .app-header-title { font-size: var(--text-lg); }
 }
 
 /* Leaflet overrides for dark theme */
