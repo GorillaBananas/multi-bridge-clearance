@@ -105,7 +105,25 @@ const CURATED_BRIDGES = [
         country: 'NZ',
         region: 'Bay of Plenty',
         spans: [
-            { id: 'main', label: 'Navigation Span', clearance: 15.2 }
+            { id: 'main', label: 'Navigation Span', clearance: 9.0 }
+        ],
+        chartDatum: 0,
+        defaultSpan: 'main',
+        tideProvider: 'linz',
+        tideStationId: 'Tauranga',
+        curated: true
+    },
+
+    {
+        id: 'matapihi-rail',
+        name: 'Matapihi Rail Bridge',
+        location: 'Tauranga Harbour, Bay of Plenty',
+        lat: -37.6930,
+        lng: 176.1660,
+        country: 'NZ',
+        region: 'Bay of Plenty',
+        spans: [
+            { id: 'main', label: 'Navigation Span', clearance: 4.0 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -119,12 +137,12 @@ const CURATED_BRIDGES = [
         id: 'kopu',
         name: 'Kopu Bridge',
         location: 'Waihou River, Thames',
-        lat: -36.9736,
-        lng: 175.5463,
+        lat: -37.1908,
+        lng: 175.5620,
         country: 'NZ',
         region: 'Waikato',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 7.0 }
+            { id: 'main', label: 'Main Span', clearance: 6.5 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -143,7 +161,7 @@ const CURATED_BRIDGES = [
         country: 'NZ',
         region: 'Northland',
         spans: [
-            { id: 'closed', label: 'Closed', clearance: 5.0 },
+            { id: 'closed', label: 'Closed', clearance: 7.5 },
             { id: 'open', label: 'Open (Bascule)', clearance: 25.0 }
         ],
         chartDatum: 0,
