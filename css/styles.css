@@ -1391,7 +1391,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .btn-sm {
     padding: var(--space-sm) var(--space-lg);
     font-size: var(--text-xs);
-    min-height: 36px;
+    min-height: 44px;
 }
 
 /* Verified chip in clearance card header */
