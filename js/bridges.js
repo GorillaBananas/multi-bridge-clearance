@@ -285,7 +285,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 39.6 }
+            { id: 'main', label: 'Main Span', clearance: 38.7 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -336,7 +336,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 42.7 }
+            { id: 'main', label: 'Main Span', clearance: 41.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -373,10 +373,11 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New England',
         spans: [
-            { id: 'main', label: 'Main Channel', clearance: 7.0 }
+            { id: 'lowered', label: 'Lowered', clearance: 2.1 },
+            { id: 'raised', label: 'Raised (Normal)', clearance: 41.1 }
         ],
         chartDatum: 0,
-        defaultSpan: 'main',
+        defaultSpan: 'lowered',
         tideProvider: 'noaa',
         tideStationId: '8447270',
         curated: true
@@ -441,7 +442,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New England',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 57.6 }
+            { id: 'main', label: 'Main Span', clearance: 59.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -488,14 +489,14 @@ const CURATED_BRIDGES = [
     },
     {
         id: 'francis-scott-key',
-        name: 'Key Bridge (Rebuilt)',
+        name: 'Key Bridge (Under Construction — est. 2030)',
         location: 'Baltimore Harbor, Maryland',
         lat: 39.2169,
         lng: -76.5278,
         country: 'US',
         region: 'Chesapeake Bay',
         spans: [
-            { id: 'main', label: 'Main Channel', clearance: 56.4 }
+            { id: 'main', label: 'Planned Main Channel', clearance: 70.0 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -506,15 +507,15 @@ const CURATED_BRIDGES = [
 
     // ==================== United States — Carolinas ICW ====================
     {
-        id: 'wrightsville-fixed',
-        name: 'Wrightsville Beach Bridge (US 74)',
+        id: 'wrightsville-bascule',
+        name: 'Wrightsville Beach Bridge (SR 74)',
         location: 'ICW, Wrightsville Beach NC',
         lat: 34.2069,
         lng: -77.8110,
         country: 'US',
         region: 'Carolinas',
         spans: [
-            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 6.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -523,19 +524,18 @@ const CURATED_BRIDGES = [
         curated: true
     },
     {
-        id: 'beaufort-drawbridge',
-        name: 'Beaufort Drawbridge (US 70)',
+        id: 'beaufort-fixed',
+        name: 'Beaufort Bridge (US 70)',
         location: 'ICW, Beaufort NC',
         lat: 34.7190,
         lng: -76.6656,
         country: 'US',
         region: 'Carolinas',
         spans: [
-            { id: 'closed', label: 'Closed', clearance: 4.0 },
-            { id: 'open', label: 'Open', clearance: 19.5 }
+            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
         ],
         chartDatum: 0,
-        defaultSpan: 'closed',
+        defaultSpan: 'main',
         tideProvider: 'noaa',
         tideStationId: '8656483',
         curated: true
@@ -808,7 +808,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — ICW',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 14.3 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.6 }
         ],
         chartDatum: 0,
         defaultSpan: 'closed',
@@ -978,10 +978,10 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — ICW',
         spans: [
-            { id: 'main', label: 'Fixed Span', clearance: 7.9 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 4.9 }
         ],
         chartDatum: 0,
-        defaultSpan: 'main',
+        defaultSpan: 'closed',
         tideProvider: 'noaa',
         tideStationId: '8723080',
         curated: true
@@ -1048,7 +1048,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.6 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 8.2 }
         ],
         chartDatum: 0,
         defaultSpan: 'closed',
@@ -1065,10 +1065,10 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.3 }
+            { id: 'main', label: 'Fixed Span', clearance: 22.6 }
         ],
         chartDatum: 0,
-        defaultSpan: 'closed',
+        defaultSpan: 'main',
         tideProvider: 'noaa',
         tideStationId: '8726724',
         curated: true
@@ -1135,7 +1135,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Gulf Coast',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 26.2 }
+            { id: 'main', label: 'Main Span', clearance: 29.0 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -1169,24 +1169,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 22.9 }
-        ],
-        chartDatum: 0,
-        defaultSpan: 'closed',
-        tideProvider: 'noaa',
-        tideStationId: '8771450',
-        curated: true
-    },
-    {
-        id: 'texas-city-dike',
-        name: 'Texas City Dike Bridge',
-        location: 'Texas City, Texas',
-        lat: 29.3894,
-        lng: -94.8820,
-        country: 'US',
-        region: 'Gulf Coast',
-        spans: [
-            { id: 'main', label: 'Main Span', clearance: 22.9 }
+            { id: 'main', label: 'Fixed Span', clearance: 22.3 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -1291,7 +1274,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'San Francisco Bay',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 41.1 }
+            { id: 'main', label: 'Main Span', clearance: 42.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
