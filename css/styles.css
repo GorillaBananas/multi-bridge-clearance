@@ -155,6 +155,7 @@ body {
     font-size: var(--text-xl);
     font-weight: 700;
     color: var(--text-primary);
+    text-wrap: balance;
 }
 
 .app-header-subtitle {
@@ -202,6 +203,7 @@ body {
     font-size: var(--text-lg);
     font-weight: 700;
     color: var(--text-primary);
+    text-wrap: balance;
 }
 
 .card-subtitle {
