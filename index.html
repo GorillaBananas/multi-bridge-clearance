@@ -140,13 +140,27 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Date</label>
-                <input type="date" id="tideDate">
+                <div class="input-with-btn">
+                    <input type="date" id="tideDate">
+                    <button class="quick-btn" onclick="setToday()" title="Set to today">Today</button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Time</label>
-                <input type="text" id="preferredTime" placeholder="e.g. 1430" maxlength="5">
+                <div class="input-with-btn">
+                    <input type="text" id="preferredTime" placeholder="e.g. 1430" maxlength="5">
+                    <button class="quick-btn" onclick="setNow()" title="Set to current time">Now</button>
+                </div>
                 <p class="input-hint">Leave blank to see all safe passage windows for the day</p>
             </div>
+            <div id="cacheStatus" class="cache-status hidden"></div>
+            <details class="advanced-toggle">
+                <summary>Advanced</summary>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="forceRefresh">
+                    Force refresh tide data (ignore cache)
+                </label>
+            </details>
         </div>
 
         <!-- Boat Details Card -->
@@ -257,6 +271,9 @@
                 renderBridgeList(results);
             });
 
+            // Update cache status when date changes
+            document.getElementById('tideDate').addEventListener('change', () => updateCacheStatus());
+
             // Time auto-format
             document.getElementById('preferredTime').addEventListener('input', function(e) {
                 let value = e.target.value.replace(/[^0-9]/g, '');
@@ -314,7 +331,8 @@
                 el.classList.toggle('selected', el.dataset.id === bridgeId);
             });
 
-            // Scroll to clearance card
+            // Update cache status and scroll
+            updateCacheStatus();
             document.getElementById('clearanceCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
@@ -485,9 +503,37 @@
                 return false;
             }
 
-            const cacheKey = `${selectedBridge.id}:${dateInput}`;
-            if (lastLoadedKey === cacheKey && currentTideData) {
-                return true; // Already loaded
+            const forceRefresh = document.getElementById('forceRefresh').checked;
+            const memCacheKey = `${selectedBridge.id}:${dateInput}`;
+
+            // In-memory cache (same session, same bridge+date)
+            if (!forceRefresh && lastLoadedKey === memCacheKey && currentTideData) {
+                return true;
+            }
+
+            // localStorage cache
+            const storageCacheKey = `tide_cache_${selectedBridge.tideProvider}_${selectedBridge.tideStationId}_${dateInput}`;
+
+            if (!forceRefresh) {
+                const cached = localStorage.getItem(storageCacheKey);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        const age = Date.now() - (data.timestamp || 0);
+                        if (age < 30 * 24 * 60 * 60 * 1000) { // 30 days
+                            // Reconstitute Date objects
+                            data.points = data.points.map(p => ({ ...p, time: new Date(p.time) }));
+                            if (data.prevDayLastPoint) data.prevDayLastPoint.time = new Date(data.prevDayLastPoint.time);
+                            if (data.nextDayFirstPoint) data.nextDayFirstPoint.time = new Date(data.nextDayFirstPoint.time);
+
+                            currentTideData = data;
+                            lastLoadedKey = memCacheKey;
+                            showToast('Tide data loaded from cache', 'success');
+                            updateCacheStatus();
+                            return true;
+                        }
+                    } catch { /* fall through to fetch */ }
+                }
             }
 
             showLoading('Loading tide data...');
@@ -499,16 +545,77 @@
                 }
 
                 currentTideData = await provider.getTidePredictions(selectedBridge.tideStationId, dateInput);
-                lastLoadedKey = cacheKey;
+                lastLoadedKey = memCacheKey;
+
+                // Cache to localStorage
+                try {
+                    const toCache = {
+                        ...currentTideData,
+                        timestamp: Date.now(),
+                        points: currentTideData.points.map(p => ({ ...p, time: p.time.toISOString() })),
+                        prevDayLastPoint: currentTideData.prevDayLastPoint ? { ...currentTideData.prevDayLastPoint, time: currentTideData.prevDayLastPoint.time.toISOString() } : null,
+                        nextDayFirstPoint: currentTideData.nextDayFirstPoint ? { ...currentTideData.nextDayFirstPoint, time: currentTideData.nextDayFirstPoint.time.toISOString() } : null
+                    };
+                    localStorage.setItem(storageCacheKey, JSON.stringify(toCache));
+                } catch { /* storage full — ignore */ }
 
                 hideLoading();
                 showToast(`Tide data loaded from ${currentTideData.source}`, 'success');
+                updateCacheStatus();
                 return true;
             } catch (error) {
                 hideLoading();
+
+                // Try to fall back to cached data
+                const cached = localStorage.getItem(storageCacheKey);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        data.points = data.points.map(p => ({ ...p, time: new Date(p.time) }));
+                        if (data.prevDayLastPoint) data.prevDayLastPoint.time = new Date(data.prevDayLastPoint.time);
+                        if (data.nextDayFirstPoint) data.nextDayFirstPoint.time = new Date(data.nextDayFirstPoint.time);
+
+                        showErrorPanel(error.message, storageCacheKey);
+                        return false;
+                    } catch { /* no usable cache */ }
+                }
+
                 showToast(error.message, 'error');
                 console.error('Tide data load error:', error);
                 return false;
+            }
+        }
+
+        function showErrorPanel(errorMsg, cacheKey) {
+            document.getElementById('resultContainer').innerHTML = `
+                <div class="error-panel-card">
+                    <div class="error-panel-icon">&#x26A0;</div>
+                    <div class="error-panel-title">Failed to Load Tide Data</div>
+                    <div class="error-panel-message">${errorMsg}</div>
+                    <div class="button-group" style="margin-top: var(--space-lg);">
+                        <button class="btn btn-secondary" onclick="document.getElementById('resultContainer').innerHTML=''; loadTideData().then(ok => { if(ok) showToast('Retry succeeded','success'); });">Try Again</button>
+                        ${cacheKey ? `<button class="btn btn-primary" onclick="useCachedData('${cacheKey}')">Use Cached Data</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function useCachedData(cacheKey) {
+            const cached = localStorage.getItem(cacheKey);
+            if (!cached) { showToast('No cached data available', 'error'); return; }
+
+            try {
+                const data = JSON.parse(cached);
+                data.points = data.points.map(p => ({ ...p, time: new Date(p.time) }));
+                if (data.prevDayLastPoint) data.prevDayLastPoint.time = new Date(data.prevDayLastPoint.time);
+                if (data.nextDayFirstPoint) data.nextDayFirstPoint.time = new Date(data.nextDayFirstPoint.time);
+
+                currentTideData = data;
+                lastLoadedKey = `${selectedBridge.id}:${document.getElementById('tideDate').value}`;
+                document.getElementById('resultContainer').innerHTML = '';
+                showToast('Using cached tide data', 'success');
+            } catch {
+                showToast('Cached data corrupted', 'error');
             }
         }
 
@@ -608,7 +715,7 @@
             }
             if (currentWindow) windows.push(currentWindow);
 
-            displayBestTimes(windows, clearanceNeeded);
+            displayBestTimes(windows, clearanceNeeded, boatHeight, safetyMargin);
         }
 
         // ==================== Display Results ====================
@@ -691,12 +798,14 @@
                                 Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--color-primary);text-decoration:underline;">${currentTideData.source}</a>
                             </p>
                         </div>
+
+                        ${renderTideChart(currentTideData, requestedTime, selectedSpanClearance, clearanceNeeded, null)}
                     </div>
                 </div>
             `;
         }
 
-        function displayBestTimes(windows, clearanceNeeded) {
+        function displayBestTimes(windows, clearanceNeeded, boatHeight, safetyMargin) {
             const container = document.getElementById('resultContainer');
             const timeOpts = { hour: '2-digit', minute: '2-digit', hour12: false };
 
@@ -777,8 +886,228 @@
                             Source: <a href="${currentTideData.sourceUrl}" target="_blank" style="color:var(--color-primary);text-decoration:underline;">${currentTideData.source}</a>
                         </p>
                     </div>
+
+                    ${renderTideChart(currentTideData, null, selectedSpanClearance, clearanceNeeded, windows)}
                 </div>
             `;
+        }
+
+        // ==================== Today / Now Helpers ====================
+        function setToday() {
+            const now = new Date();
+            document.getElementById('tideDate').value = now.toISOString().slice(0, 10);
+        }
+
+        function setNow() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('preferredTime').value = `${h}:${m}`;
+        }
+
+        // ==================== Cache Status ====================
+        function updateCacheStatus() {
+            const el = document.getElementById('cacheStatus');
+            if (!selectedBridge) { el.classList.add('hidden'); return; }
+
+            const dateInput = document.getElementById('tideDate').value;
+            if (!dateInput) { el.classList.add('hidden'); return; }
+
+            const cacheKey = `tide_cache_${selectedBridge.tideProvider}_${selectedBridge.tideStationId}_${dateInput}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                try {
+                    const data = JSON.parse(cached);
+                    const age = Date.now() - (data.timestamp || 0);
+                    const mins = Math.floor(age / 60000);
+                    const hours = Math.floor(mins / 60);
+                    const days = Math.floor(hours / 24);
+
+                    let ageStr;
+                    if (days > 0) ageStr = `${days}d ago`;
+                    else if (hours > 0) ageStr = `${hours}h ago`;
+                    else ageStr = `${mins}m ago`;
+
+                    el.innerHTML = `<span class="cache-dot cached"></span> Cached (${ageStr})`;
+                    el.classList.remove('hidden');
+                } catch {
+                    el.classList.add('hidden');
+                }
+            } else {
+                el.innerHTML = `<span class="cache-dot"></span> Not cached — will fetch live`;
+                el.classList.remove('hidden');
+            }
+        }
+
+        // ==================== SVG Tide Chart ====================
+        function renderTideChart(tideData, requestedTime, spanClearance, clearanceNeeded, safeWindows) {
+            const points = tideData.points;
+            if (!points || points.length < 2) return '';
+
+            // Generate interpolated curve points (every 10 min)
+            const curvePoints = [];
+            const dayStart = new Date(points[0].time);
+            dayStart.setHours(0, 0, 0, 0);
+
+            const allPoints = [];
+            if (tideData.prevDayLastPoint) allPoints.push(tideData.prevDayLastPoint);
+            allPoints.push(...points);
+            if (tideData.nextDayFirstPoint) allPoints.push(tideData.nextDayFirstPoint);
+
+            for (let m = 0; m < 24 * 60; m += 10) {
+                const t = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), 0, m, 0);
+                const result = interpolateTideHeight(points, t, tideData.prevDayLastPoint, tideData.nextDayFirstPoint);
+                if (result && result.height !== null) {
+                    curvePoints.push({ time: t, height: result.height });
+                }
+            }
+
+            if (curvePoints.length < 2) return '';
+
+            // Chart dimensions
+            const W = 700, H = 360;
+            const pad = { top: 50, right: 20, bottom: 50, left: 55 };
+            const plotW = W - pad.left - pad.right;
+            const plotH = H - pad.top - pad.bottom;
+
+            // Y scale
+            const heights = curvePoints.map(p => p.height);
+            const maxSafeTide = spanClearance && clearanceNeeded ? spanClearance - clearanceNeeded : null;
+            const yMin = Math.floor(Math.min(...heights, 0) * 2) / 2;
+            let yMax = Math.ceil(Math.max(...heights) * 2) / 2;
+            if (maxSafeTide !== null) yMax = Math.max(yMax, Math.ceil(maxSafeTide * 2) / 2);
+            yMax = Math.max(yMax, yMin + 0.5);
+
+            const yScale = (v) => pad.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+            const xScale = (t) => {
+                const mins = (t - dayStart) / 60000;
+                return pad.left + (mins / (24 * 60)) * plotW;
+            };
+
+            // Build smooth path using cardinal spline
+            const pts = curvePoints.map(p => [xScale(p.time), yScale(p.height)]);
+            const pathD = cardinalSplinePath(pts, 0.4);
+
+            // Fill area under curve
+            const fillD = `${pathD} L${pts[pts.length - 1][0]},${yScale(yMin)} L${pts[0][0]},${yScale(yMin)} Z`;
+
+            // Safe window rects
+            let safeWindowsSvg = '';
+            if (safeWindows && safeWindows.length > 0) {
+                safeWindowsSvg = safeWindows.map(w => {
+                    const x1 = xScale(w.start.time);
+                    const x2 = xScale(w.end.time);
+                    return `<rect x="${x1}" y="${pad.top}" width="${Math.max(x2 - x1, 2)}" height="${plotH}" fill="var(--color-safe)" opacity="0.15"/>
+                        <line x1="${x1}" y1="${pad.top}" x2="${x1}" y2="${pad.top + plotH}" stroke="var(--color-safe)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+                        <line x1="${x2}" y1="${pad.top}" x2="${x2}" y2="${pad.top + plotH}" stroke="var(--color-safe)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>`;
+                }).join('');
+            }
+
+            // Max safe tide line
+            let safeTideLine = '';
+            if (maxSafeTide !== null) {
+                const y = yScale(maxSafeTide);
+                safeTideLine = `<line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="var(--color-accent)" stroke-width="1.5" stroke-dasharray="6,4"/>
+                    <text x="${pad.left + plotW - 4}" y="${y - 6}" fill="var(--color-accent)" font-size="11" text-anchor="end" font-weight="600">${maxSafeTide.toFixed(2)}m max</text>`;
+            }
+
+            // Requested time marker
+            let timeMarker = '';
+            if (requestedTime) {
+                const x = xScale(requestedTime);
+                if (x >= pad.left && x <= pad.left + plotW) {
+                    timeMarker = `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${pad.top + plotH}" stroke="var(--color-danger)" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+                }
+            }
+
+            // Tide point markers (actual data points)
+            const markers = points.map(p => {
+                const x = xScale(p.time);
+                const y = yScale(p.height);
+                const timeOpts = { hour: '2-digit', minute: '2-digit', hour12: false };
+                const label = p.time.toLocaleTimeString(undefined, timeOpts);
+                const isHigh = p.type === 'high' || (points.indexOf(p) > 0 && p.height > points[points.indexOf(p) - 1].height);
+                const ly = isHigh ? y - 14 : y + 18;
+                return `<circle cx="${x}" cy="${y}" r="4" fill="var(--neutral-0)" stroke="var(--color-primary)" stroke-width="2"/>
+                    <text x="${x}" y="${ly}" fill="var(--text-secondary)" font-size="10" text-anchor="middle" font-weight="500">${label}</text>
+                    <text x="${x}" y="${ly + (isHigh ? -12 : 12)}" fill="var(--text-tertiary)" font-size="10" text-anchor="middle">${p.height.toFixed(2)}m</text>`;
+            }).join('');
+
+            // X-axis labels (every 3 hours)
+            const xLabels = [];
+            for (let h = 0; h <= 24; h += 3) {
+                const t = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), h, 0, 0);
+                const x = xScale(t);
+                xLabels.push(`<text x="${x}" y="${H - pad.bottom + 20}" fill="var(--text-tertiary)" font-size="11" text-anchor="middle">${String(h).padStart(2, '0')}:00</text>
+                    <line x1="${x}" y1="${pad.top}" x2="${x}" y2="${pad.top + plotH}" stroke="var(--border-default)" stroke-width="0.5"/>`);
+            }
+
+            // Y-axis labels
+            const yLabels = [];
+            const yStep = (yMax - yMin) > 2 ? 1 : 0.5;
+            for (let v = yMin; v <= yMax; v += yStep) {
+                const y = yScale(v);
+                yLabels.push(`<text x="${pad.left - 8}" y="${y + 4}" fill="var(--text-tertiary)" font-size="11" text-anchor="end">${v.toFixed(1)}</text>
+                    <line x1="${pad.left}" y1="${y}" x2="${pad.left + plotW}" y2="${y}" stroke="var(--border-default)" stroke-width="0.5"/>`);
+            }
+
+            // Legend
+            const legend = `
+                <g transform="translate(${pad.left + 8}, ${pad.top - 30})">
+                    <line x1="0" y1="0" x2="16" y2="0" stroke="var(--color-primary)" stroke-width="2"/>
+                    <text x="20" y="4" fill="var(--text-secondary)" font-size="10">Tide height</text>
+                    ${maxSafeTide !== null ? `
+                    <line x1="90" y1="0" x2="106" y2="0" stroke="var(--color-accent)" stroke-width="1.5" stroke-dasharray="4,3"/>
+                    <text x="110" y="4" fill="var(--text-secondary)" font-size="10">Max safe tide</text>` : ''}
+                    ${safeWindows && safeWindows.length > 0 ? `
+                    <rect x="200" y="-6" width="12" height="12" fill="var(--color-safe)" opacity="0.3" rx="2"/>
+                    <text x="216" y="4" fill="var(--text-secondary)" font-size="10">Safe window</text>` : ''}
+                </g>`;
+
+            return `
+                <div class="tide-chart-container">
+                    <button class="tide-chart-toggle" onclick="this.parentElement.classList.toggle('expanded')">
+                        <span class="toggle-label">Tide Chart</span>
+                        <span class="toggle-arrow">&#x25BC;</span>
+                    </button>
+                    <div class="tide-chart-body">
+                        <svg viewBox="0 0 ${W} ${H}" class="tide-chart-svg">
+                            ${xLabels.join('')}
+                            ${yLabels.join('')}
+                            ${safeWindowsSvg}
+                            ${safeTideLine}
+                            <path d="${fillD}" fill="var(--color-primary)" opacity="0.1"/>
+                            <path d="${pathD}" fill="none" stroke="var(--color-primary)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                            ${timeMarker}
+                            ${markers}
+                            ${legend}
+                        </svg>
+                    </div>
+                </div>`;
+        }
+
+        function cardinalSplinePath(points, tension) {
+            if (points.length < 2) return '';
+            tension = tension || 0.4;
+
+            let d = `M${points[0][0]},${points[0][1]}`;
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = points[Math.max(0, i - 1)];
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const p3 = points[Math.min(points.length - 1, i + 2)];
+
+                const cp1x = p1[0] + (p2[0] - p0[0]) / (6 / tension);
+                const cp1y = p1[1] + (p2[1] - p0[1]) / (6 / tension);
+                const cp2x = p2[0] - (p3[0] - p1[0]) / (6 / tension);
+                const cp2y = p2[1] - (p3[1] - p1[1]) / (6 / tension);
+
+                d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
+            }
+
+            return d;
         }
 
         // ==================== Utilities ====================
