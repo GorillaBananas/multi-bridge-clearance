@@ -495,6 +495,26 @@ body {
     display: none;
 }
 
+/* Near You section — prominent at top */
+.nearby-region {
+    background: var(--color-info-bg);
+    border: 1px solid rgba(74, 158, 197, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--space-xs) var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.nearby-header:hover {
+    background: rgba(74, 158, 197, 0.08);
+}
+
+.nearby-label {
+    color: var(--color-primary) !important;
+    font-size: var(--text-sm) !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
 /* ================================================
    SPAN GRID
    ================================================ */

@@ -138,7 +138,10 @@
         <div id="clearanceCard" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x1F4CF;</div>
-                <h2 class="card-title">Bridge Clearance</h2>
+                <div>
+                    <h2 class="card-title" id="clearanceCardTitle">Bridge Clearance</h2>
+                    <div class="card-subtitle" id="clearanceCardSubtitle"></div>
+                </div>
                 <span id="clearanceVerifiedBadge" class="clearance-verified-chip hidden">Verified</span>
             </div>
             <div id="spanSelector" class="span-grid"></div>
@@ -337,6 +340,10 @@
             // Show/hide verification banner
             updateVerificationUI(bridge);
 
+            // Update clearance card title with bridge name
+            document.getElementById('clearanceCardTitle').textContent = bridge.name;
+            document.getElementById('clearanceCardSubtitle').textContent = bridge.location;
+
             // Update span selector
             renderSpanSelector(bridge);
 
@@ -387,8 +394,33 @@
             if (showGrouped) {
                 const countryGroups = db.getGroupedByCountry(userLat, userLng);
 
-                container.innerHTML = countryGroups.map(({ label, bridges: countryBridges }) => `
-                    <div class="bridge-region">
+                // Build "Near You" section if we have user location
+                let nearYouHtml = '';
+                if (userLat != null && userLng != null) {
+                    const nearbyBridges = bridges
+                        .map(b => ({ ...b, distance: haversineDistance(userLat, userLng, b.lat, b.lng) }))
+                        .filter(b => b.distance <= 50)
+                        .sort((a, b) => a.distance - b.distance)
+                        .slice(0, 8);
+
+                    if (nearbyBridges.length > 0) {
+                        nearYouHtml = `
+                            <div class="bridge-region nearby-region">
+                                <div class="bridge-region-header nearby-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                    <span class="bridge-region-name nearby-label">&#x1F4CD; Near You</span>
+                                    <span class="bridge-region-count">${nearbyBridges.length}</span>
+                                    <span class="bridge-region-chevron">▾</span>
+                                </div>
+                                <div class="bridge-region-items">
+                                    ${nearbyBridges.map(b => renderBridgeItem(b)).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML = nearYouHtml + countryGroups.map(({ label, bridges: countryBridges }) => `
+                    <div class="bridge-region collapsed">
                         <div class="bridge-region-header" onclick="this.parentElement.classList.toggle('collapsed')">
                             <span class="bridge-region-name">${label}</span>
                             <span class="bridge-region-count">${countryBridges.length}</span>
