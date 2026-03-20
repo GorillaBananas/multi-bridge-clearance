@@ -2,6 +2,7 @@
 // Persisted in localStorage
 
 const STORAGE_KEY = 'bridgeClearance_bridges';
+const VERIFIED_KEY = 'bridgeClearance_verified';
 
 // Curated bridge database - known navigable bridges with posted vertical clearances
 // Clearances are measured from chart datum (CD) unless otherwise noted
@@ -41,7 +42,8 @@ const CURATED_BRIDGES = [
         defaultSpan: 'in-out',
         tideProvider: 'linz',
         tideStationId: 'Auckland',
-        curated: true
+        curated: true,
+        verified: true
     },
     {
         id: 'panmure',
@@ -285,7 +287,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 39.6 }
+            { id: 'main', label: 'Main Span', clearance: 38.7 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -336,7 +338,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New York',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 42.7 }
+            { id: 'main', label: 'Main Span', clearance: 41.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -373,10 +375,11 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New England',
         spans: [
-            { id: 'main', label: 'Main Channel', clearance: 7.0 }
+            { id: 'lowered', label: 'Lowered', clearance: 2.1 },
+            { id: 'raised', label: 'Raised (Normal)', clearance: 41.1 }
         ],
         chartDatum: 0,
-        defaultSpan: 'main',
+        defaultSpan: 'lowered',
         tideProvider: 'noaa',
         tideStationId: '8447270',
         curated: true
@@ -441,7 +444,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'New England',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 57.6 }
+            { id: 'main', label: 'Main Span', clearance: 59.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -488,14 +491,14 @@ const CURATED_BRIDGES = [
     },
     {
         id: 'francis-scott-key',
-        name: 'Key Bridge (Rebuilt)',
+        name: 'Key Bridge (Under Construction — est. 2030)',
         location: 'Baltimore Harbor, Maryland',
         lat: 39.2169,
         lng: -76.5278,
         country: 'US',
         region: 'Chesapeake Bay',
         spans: [
-            { id: 'main', label: 'Main Channel', clearance: 56.4 }
+            { id: 'main', label: 'Planned Main Channel', clearance: 70.0 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -506,15 +509,15 @@ const CURATED_BRIDGES = [
 
     // ==================== United States — Carolinas ICW ====================
     {
-        id: 'wrightsville-fixed',
-        name: 'Wrightsville Beach Bridge (US 74)',
+        id: 'wrightsville-bascule',
+        name: 'Wrightsville Beach Bridge (SR 74)',
         location: 'ICW, Wrightsville Beach NC',
         lat: 34.2069,
         lng: -77.8110,
         country: 'US',
         region: 'Carolinas',
         spans: [
-            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 6.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -523,19 +526,18 @@ const CURATED_BRIDGES = [
         curated: true
     },
     {
-        id: 'beaufort-drawbridge',
-        name: 'Beaufort Drawbridge (US 70)',
+        id: 'beaufort-fixed',
+        name: 'Beaufort Bridge (US 70)',
         location: 'ICW, Beaufort NC',
         lat: 34.7190,
         lng: -76.6656,
         country: 'US',
         region: 'Carolinas',
         spans: [
-            { id: 'closed', label: 'Closed', clearance: 4.0 },
-            { id: 'open', label: 'Open', clearance: 19.5 }
+            { id: 'main', label: 'Fixed Span', clearance: 19.8 }
         ],
         chartDatum: 0,
-        defaultSpan: 'closed',
+        defaultSpan: 'main',
         tideProvider: 'noaa',
         tideStationId: '8656483',
         curated: true
@@ -808,7 +810,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — ICW',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 14.3 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.6 }
         ],
         chartDatum: 0,
         defaultSpan: 'closed',
@@ -978,10 +980,10 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — ICW',
         spans: [
-            { id: 'main', label: 'Fixed Span', clearance: 7.9 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 4.9 }
         ],
         chartDatum: 0,
-        defaultSpan: 'main',
+        defaultSpan: 'closed',
         tideProvider: 'noaa',
         tideStationId: '8723080',
         curated: true
@@ -1048,7 +1050,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.6 }
+            { id: 'closed', label: 'Closed (Bascule)', clearance: 8.2 }
         ],
         chartDatum: 0,
         defaultSpan: 'closed',
@@ -1065,10 +1067,10 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Florida — Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 7.3 }
+            { id: 'main', label: 'Fixed Span', clearance: 22.6 }
         ],
         chartDatum: 0,
-        defaultSpan: 'closed',
+        defaultSpan: 'main',
         tideProvider: 'noaa',
         tideStationId: '8726724',
         curated: true
@@ -1135,7 +1137,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Gulf Coast',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 26.2 }
+            { id: 'main', label: 'Main Span', clearance: 29.0 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -1169,24 +1171,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'Gulf Coast',
         spans: [
-            { id: 'closed', label: 'Closed (Bascule)', clearance: 22.9 }
-        ],
-        chartDatum: 0,
-        defaultSpan: 'closed',
-        tideProvider: 'noaa',
-        tideStationId: '8771450',
-        curated: true
-    },
-    {
-        id: 'texas-city-dike',
-        name: 'Texas City Dike Bridge',
-        location: 'Texas City, Texas',
-        lat: 29.3894,
-        lng: -94.8820,
-        country: 'US',
-        region: 'Gulf Coast',
-        spans: [
-            { id: 'main', label: 'Main Span', clearance: 22.9 }
+            { id: 'main', label: 'Fixed Span', clearance: 22.3 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -1291,7 +1276,7 @@ const CURATED_BRIDGES = [
         country: 'US',
         region: 'San Francisco Bay',
         spans: [
-            { id: 'main', label: 'Main Span', clearance: 41.1 }
+            { id: 'main', label: 'Main Span', clearance: 42.1 }
         ],
         chartDatum: 0,
         defaultSpan: 'main',
@@ -1395,6 +1380,7 @@ class BridgeDatabase {
     constructor() {
         this.bridges = [...CURATED_BRIDGES];
         this._loadUserBridges();
+        this._loadVerifiedBridges();
     }
 
     _loadUserBridges() {
@@ -1412,6 +1398,43 @@ class BridgeDatabase {
     _saveUserBridges() {
         const userBridges = this.bridges.filter(b => !b.curated);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(userBridges));
+    }
+
+    _loadVerifiedBridges() {
+        try {
+            const stored = localStorage.getItem(VERIFIED_KEY);
+            if (stored) {
+                const verifiedIds = JSON.parse(stored);
+                for (const b of this.bridges) {
+                    if (verifiedIds.includes(b.id)) b.verified = true;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load verified bridges:', e);
+        }
+    }
+
+    _saveVerifiedBridges() {
+        const verifiedIds = this.bridges.filter(b => b.verified).map(b => b.id);
+        localStorage.setItem(VERIFIED_KEY, JSON.stringify(verifiedIds));
+    }
+
+    verifyBridge(id) {
+        const bridge = this.getById(id);
+        if (bridge) {
+            bridge.verified = true;
+            this._saveVerifiedBridges();
+        }
+        return bridge;
+    }
+
+    unverifyBridge(id) {
+        const bridge = this.getById(id);
+        if (bridge) {
+            bridge.verified = false;
+            this._saveVerifiedBridges();
+        }
+        return bridge;
     }
 
     getAll() {
@@ -1445,6 +1468,54 @@ class BridgeDatabase {
             groups[region].push(b);
         }
         return groups;
+    }
+
+    // Get bridges grouped by country, sorted by proximity to user location
+    getGroupedByCountry(userLat, userLng) {
+        const COUNTRY_NAMES = {
+            'NZ': 'New Zealand',
+            'US': 'United States',
+            'AU': 'Australia',
+            'UK': 'United Kingdom',
+        };
+
+        const groups = {};
+        for (const b of this.bridges) {
+            const code = b.country || 'Other';
+            const label = COUNTRY_NAMES[code] || code;
+            if (!groups[label]) groups[label] = { bridges: [], code };
+            groups[label].bridges.push(b);
+        }
+
+        // Sort bridges within each country: by region, then alphabetically by name
+        for (const label of Object.keys(groups)) {
+            groups[label].bridges.sort((a, b) => {
+                const regionCmp = (a.region || '').localeCompare(b.region || '');
+                if (regionCmp !== 0) return regionCmp;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
+        // Sort country groups by distance to user (nearest first)
+        let sortedEntries = Object.entries(groups);
+        if (userLat != null && userLng != null && typeof haversineDistance === 'function') {
+            // Compute average lat/lng per country group as centroid
+            const centroids = {};
+            for (const [label, group] of sortedEntries) {
+                const bridges = group.bridges;
+                const avgLat = bridges.reduce((s, b) => s + b.lat, 0) / bridges.length;
+                const avgLng = bridges.reduce((s, b) => s + b.lng, 0) / bridges.length;
+                centroids[label] = { lat: avgLat, lng: avgLng };
+            }
+            sortedEntries.sort((a, b) => {
+                const distA = haversineDistance(userLat, userLng, centroids[a[0]].lat, centroids[a[0]].lng);
+                const distB = haversineDistance(userLat, userLng, centroids[b[0]].lat, centroids[b[0]].lng);
+                return distA - distB;
+            });
+        }
+
+        // Return as ordered array of { label, bridges }
+        return sortedEntries.map(([label, group]) => ({ label, bridges: group.bridges }));
     }
 
     search(query) {

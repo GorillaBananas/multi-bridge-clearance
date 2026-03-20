@@ -120,11 +120,26 @@
             </div>
         </div>
 
+        <!-- Verification Warning Banner (shows for unverified bridges) -->
+        <div id="verificationBanner" class="verification-banner hidden">
+            <div class="verification-banner-content">
+                <div class="verification-banner-icon">&#x25B2;</div>
+                <div class="verification-banner-text">
+                    <strong>Unverified clearance</strong> — this height is a best estimate from public sources.
+                    Please confirm against your chart or local knowledge before relying on it.
+                </div>
+            </div>
+            <div class="verification-banner-actions">
+                <button class="btn btn-secondary btn-sm" onclick="verifySelectedBridge()">I confirm this is correct</button>
+            </div>
+        </div>
+
         <!-- Bridge Clearance Card (shows after bridge selected) -->
         <div id="clearanceCard" class="card hidden">
             <div class="card-header">
                 <div class="card-icon">&#x1F4CF;</div>
                 <h2 class="card-title">Bridge Clearance</h2>
+                <span id="clearanceVerifiedBadge" class="clearance-verified-chip hidden">Verified</span>
             </div>
             <div id="spanSelector" class="span-grid"></div>
             <div class="info-panel">
@@ -232,6 +247,8 @@
         let selectedSpanName = '';
         let currentTideData = null; // { points, prevDayLastPoint, nextDayFirstPoint, source, ... }
         let lastLoadedKey = null; // "bridgeId:date" cache key
+        let userLat = null;
+        let userLng = null;
 
         // ==================== Initialize ====================
         document.addEventListener('DOMContentLoaded', () => {
@@ -283,14 +300,14 @@
                 e.target.value = value;
             });
 
-            // Try to locate user and show nearby bridges
+            // Try to locate user and sort country groups by proximity
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    const nearby = db.findNearby(pos.coords.latitude, pos.coords.longitude, 200);
-                    if (nearby.length > 0) {
-                        renderBridgeList(nearby);
-                        bridgeMap.map.setView([pos.coords.latitude, pos.coords.longitude], 10);
-                    }
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    // Re-render bridge list with country groups sorted by proximity
+                    renderBridgeList(db.getAll(), true);
+                    bridgeMap.map.setView([userLat, userLng], 10);
                 }, () => {
                     // Geolocation denied - show all bridges
                     bridgeMap.fitAllBridges();
@@ -317,6 +334,9 @@
             document.getElementById('boatCard').classList.remove('hidden');
             document.getElementById('resultContainer').innerHTML = '';
 
+            // Show/hide verification banner
+            updateVerificationUI(bridge);
+
             // Update span selector
             renderSpanSelector(bridge);
 
@@ -333,32 +353,49 @@
 
             // Update cache status and scroll
             updateCacheStatus();
-            document.getElementById('clearanceCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            const scrollTarget = bridge.verified ? 'clearanceCard' : 'verificationBanner';
+            document.getElementById(scrollTarget).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function updateVerificationUI(bridge) {
+            const banner = document.getElementById('verificationBanner');
+            const badge = document.getElementById('clearanceVerifiedBadge');
+
+            if (bridge.verified) {
+                banner.classList.add('hidden');
+                badge.classList.remove('hidden');
+            } else {
+                banner.classList.remove('hidden');
+                badge.classList.add('hidden');
+            }
+        }
+
+        function verifySelectedBridge() {
+            if (!selectedBridge) return;
+            db.verifyBridge(selectedBridge.id);
+            updateVerificationUI(selectedBridge);
+            renderBridgeList(db.getAll(), true);
+            showToast('Bridge clearance marked as verified', 'success');
         }
 
         function renderBridgeList(bridges, grouped = false) {
             const container = document.getElementById('bridgeList');
 
-            // If showing all bridges (not search/nearby), group by region
+            // If showing all bridges (not search/nearby), group by country
             const showGrouped = grouped && bridges.length > 10;
 
             if (showGrouped) {
-                const groups = {};
-                for (const b of bridges) {
-                    const region = b.region || 'Other';
-                    if (!groups[region]) groups[region] = [];
-                    groups[region].push(b);
-                }
+                const countryGroups = db.getGroupedByCountry(userLat, userLng);
 
-                container.innerHTML = Object.entries(groups).map(([region, regionBridges]) => `
+                container.innerHTML = countryGroups.map(({ label, bridges: countryBridges }) => `
                     <div class="bridge-region">
                         <div class="bridge-region-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                            <span class="bridge-region-name">${region}</span>
-                            <span class="bridge-region-count">${regionBridges.length}</span>
+                            <span class="bridge-region-name">${label}</span>
+                            <span class="bridge-region-count">${countryBridges.length}</span>
                             <span class="bridge-region-chevron">▾</span>
                         </div>
                         <div class="bridge-region-items">
-                            ${regionBridges.map(b => renderBridgeItem(b)).join('')}
+                            ${countryBridges.map(b => renderBridgeItem(b)).join('')}
                         </div>
                     </div>
                 `).join('');
@@ -371,10 +408,14 @@
             const maxClearance = Math.max(...b.spans.map(s => s.clearance));
             const distanceStr = b.distance ? ` (${b.distance.toFixed(0)} km)` : '';
             const isSelected = selectedBridge && selectedBridge.id === b.id;
+            const verifiedClass = b.verified ? 'verified' : 'unverified';
+            const verifiedBadge = b.verified
+                ? '<span class="bridge-verified-badge" title="Clearance verified">&#x2713;</span>'
+                : '<span class="bridge-unverified-badge" title="Unverified — confirm against chart">&#x25B2;</span>';
             return `
-                <div class="bridge-item ${isSelected ? 'selected' : ''}" data-id="${b.id}" onclick="selectBridge('${b.id}')">
+                <div class="bridge-item ${isSelected ? 'selected' : ''} ${verifiedClass}" data-id="${b.id}" onclick="selectBridge('${b.id}')">
                     <div class="bridge-item-info">
-                        <div class="bridge-item-name">${b.name}${!b.curated ? ' *' : ''}</div>
+                        <div class="bridge-item-name">${verifiedBadge} ${b.name}${!b.curated ? ' *' : ''}</div>
                         <div class="bridge-item-location">${b.location}${distanceStr}</div>
                     </div>
                     <div style="text-align: right;">
